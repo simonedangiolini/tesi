@@ -131,3 +131,131 @@ for (row in 1:nrow(connessioni_reinserite_yVd)){
 }
 write.table(connessioni_reinserite_yVd_finale, paste(path, "cuore/connessioni_reinserite_yVd_finale", sep="/"), row.names = FALSE, quote = FALSE)
 
+
+#devo eliminare tutte le righe delle connessioni in cui solo texmining e texmining transferred sono diversi da 0
+connessioni_oVd<-connessioni_oVd[connessioni_oVd$homology!=0 | connessioni_oVd$experiments!=0 | connessioni_oVd$experiments_transferred!=0 | connessioni_oVd$database!=0 | connessioni_oVd$database_transferred!=0,]
+connessioni_yVd<-connessioni_yVd[connessioni_yVd$homology!=0 | connessioni_yVd$experiments!=0 | connessioni_yVd$experiments_transferred!=0 | connessioni_yVd$database!=0 | connessioni_yVd$database_transferred!=0,]
+
+#ora devo vedere quali sono presenti in righe diverse con ordine diverso però con gli stessi geni, quindi la stessa connessione rappresentata scambiando l'ordine dei geni
+connessioni_oVd_prova<-connessioni_oVd
+#altro modo
+#metto nelle colonne gli elemnti secondo il loro ordine alfabatetico per il quale gene2 sarà sempre minore di gene4
+for (row in 1:nrow(connessioni_oVd_prova)){
+  if (row %% 10 == 0){
+    print(row)
+  }
+  if (connessioni_oVd_prova[row,2]>connessioni_oVd_prova[row,4]){
+    x=connessioni_oVd_prova[row,2]
+    y=connessioni_oVd_prova[row,4]
+    connessioni_oVd_prova[row,2]=y
+    connessioni_oVd_prova[row,4]=x
+  }
+  }
+#ora tutti quelli in gene 2 sono alfabeticamente minori di quelli in gene 4
+#adesso riordino alfabeticamente per entrambe le colonne e quelle uguali dovrebbero risultare una dopo l'altra a coppie
+connessioni_oVd_ordinato_alfabeticamente<-connessioni_oVd_prova
+#proviamo come potrebbe ora funzionare
+
+connessioni_oVd_ordinato_alfabeticamente<-connessioni_oVd_prova[order(connessioni_oVd_prova[,2],connessioni_oVd_prova[,4]),]
+#alla grande, funziona. Adesso devo fare un ciclo per cui per ogni riga, se gene 1 e gene 2 sono uguali a quelli della riga sotto, mi mette il nome della riga sotto in un vettore
+#prima devo rimettere bene i nomi delle righe da 1 a 69k in connessioni...
+row.names(connessioni_oVd_ordinato_alfabeticamente)<-rep(1:69609)
+#ora proviamo così
+righe_da_eliminare=c()
+for (row in 1:nrow(connessioni_oVd_ordinato_alfabeticamente)){
+    if (connessioni_oVd_ordinato_alfabeticamente[row,2]==connessioni_oVd_ordinato_alfabeticamente[row+1,2] & connessioni_oVd_ordinato_alfabeticamente[row,4]==connessioni_oVd_ordinato_alfabeticamente[row+1,4] ){
+    righe_da_eliminare<-append(righe_da_eliminare,row+1)
+    }
+}
+
+connessioni_oVd_finali<-connessioni_oVd_ordinato_alfabeticamente[!row.names(connessioni_oVd_ordinato_alfabeticamente)%in%righe_da_eliminare,]
+#FATTOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO!!!! Ora tocca farlo uguale anche per yVd
+connessioni_yVd_prova<-connessioni_yVd
+for (row in 1:nrow(connessioni_yVd_prova)){
+  if (row %% 1000 == 0){
+    print(row)
+  }
+  if (connessioni_yVd_prova[row,2]>connessioni_yVd_prova[row,4]){
+    x=connessioni_yVd_prova[row,2]
+    y=connessioni_yVd_prova[row,4]
+    connessioni_yVd_prova[row,2]=y
+    connessioni_yVd_prova[row,4]=x
+  }
+}
+
+connessioni_yVd_ordinato_alfabeticamente<-connessioni_yVd_prova
+connessioni_yVd_ordinato_alfabeticamente<-connessioni_yVd_prova[order(connessioni_yVd_prova[,2],connessioni_yVd_prova[,4]),]
+row.names(connessioni_yVd_ordinato_alfabeticamente)<-rep(1:164092)
+righe_da_eliminare=c()
+for (row in 1:nrow(connessioni_yVd_ordinato_alfabeticamente)){
+  if (connessioni_yVd_ordinato_alfabeticamente[row,2]==connessioni_yVd_ordinato_alfabeticamente[row+1,2] & connessioni_yVd_ordinato_alfabeticamente[row,4]==connessioni_yVd_ordinato_alfabeticamente[row+1,4] ){
+    righe_da_eliminare<-append(righe_da_eliminare,row+1)
+  }
+}
+connessioni_yVd_finali<-connessioni_yVd_ordinato_alfabeticamente[!row.names(connessioni_yVd_ordinato_alfabeticamente)%in%righe_da_eliminare,]
+
+
+#connessioni finali fatte! cytoscape. 
+write.table(connessioni_yVd_finali, paste(path, "cuore/connessioni_yVd_finale", sep="/"), row.names = FALSE, quote = FALSE)
+write.table(connessioni_oVd_finali, paste(path, "cuore/connessioni_oVd_finale", sep="/"), row.names = FALSE, quote = FALSE)
+
+#runnare lo scipt solo da qua, non ha senso ricaricare tutto tutto
+library(dplyr)
+library(plyr)
+path <- "/home/simone/Scrivania/simone/tirocinio"
+connessioni_oVd_finali<-read.table(file=paste(path, "cuore/connessioni_oVd_finale", sep="/"), header=TRUE)
+connessioni_yVd_finali<-read.table(file=paste(path, "cuore/connessioni_yVd_finale", sep="/"), header=TRUE)
+connessioni_oVd_expdb<-connessioni_oVd_finali[connessioni_oVd_finali$experiments != 0 |  connessioni_oVd_finali$database!=0,]
+connessioni_yVd_expdb<-connessioni_yVd_finali[connessioni_yVd_finali$experiments != 0 |  connessioni_yVd_finali$database!=0,]
+write.table(connessioni_yVd_expdb, paste(path, "cuore/connessioni_yVd_expdb", sep="/"), row.names = FALSE, quote = FALSE)
+write.table(connessioni_oVd_expdb, paste(path, "cuore/connessioni_oVd_expdb", sep="/"), row.names = FALSE, quote = FALSE)
+connessioni_oVd_expdb$gene_1_lfg<-ALL[connessioni_oVd_expdb$gene_1,3]
+connessioni_oVd_expdb$gene_2_lfg
+
+
+#network_prova<-connessioni_yVd_finali[rep(1:5000),]
+#write.table(network_prova, paste(path, "cuore/network_prova", sep="/"), row.names = FALSE, quote = FALSE)
+ALL<-read.table(file=paste(path, "tesi/risultati_analisi/plot_e_dati/hearts/ALL", sep="/"), header=TRUE)
+#devo aggiungere i lfc di ogni gene, ma prima devo farli ritornare col il vecchio nome quindi
+row.names(omessi_oVd_filtrati)<-omessi_oVd_filtrati$preferredName
+row.names(omessi_yVd_filtrati)<-omessi_yVd_filtrati$preferredName
+
+for (row in 1:nrow(connessioni_oVd_expdb)){
+  if (connessioni_oVd_expdb[row,2] %in% omessi_oVd_filtrati$preferredName ){
+    connessioni_oVd_expdb[row,2] <- omessi_oVd_filtrati[connessioni_oVd_expdb[row,2],1]
+  }
+}
+
+for (row in 1:nrow(connessioni_oVd_expdb)){
+  if (connessioni_oVd_expdb[row,4] %in% omessi_oVd_filtrati$preferredName ){
+    connessioni_oVd_expdb[row,4] <- omessi_oVd_filtrati[connessioni_oVd_expdb[row,4],1]
+  }
+}
+
+for (row in 1:nrow(connessioni_yVd_expdb)){
+  if (connessioni_yVd_expdb[row,2] %in% omessi_yVd_filtrati$preferredName ){
+    connessioni_yVd_expdb[row,2] <- omessi_yVd_filtrati[connessioni_yVd_expdb[row,2],1]
+  }
+}
+
+for (row in 1:nrow(connessioni_yVd_expdb)){
+  if (connessioni_yVd_expdb[row,4] %in% omessi_yVd_filtrati$preferredName ){
+    connessioni_yVd_expdb[row,4] <- omessi_yVd_filtrati[connessioni_yVd_expdb[row,4],1]
+  }
+}
+
+
+connessioni_oVd_expdb$gene_1_lfg<-ALL[connessioni_oVd_expdb$gene_1,3]
+connessioni_oVd_expdb$gene_2_lfg<-ALL[connessioni_oVd_expdb$gene_2,3]
+
+connessioni_yVd_expdb$gene_1_lfg<-ALL[connessioni_yVd_expdb$gene_1,1]
+connessioni_yVd_expdb$gene_2_lfg<-ALL[connessioni_yVd_expdb$gene_2,1]
+
+write.table(connessioni_yVd_expdb, paste(path, "cuore/connessioni_yVd_expdb", sep="/"), row.names = FALSE, quote = FALSE)
+write.table(connessioni_oVd_expdb, paste(path, "cuore/connessioni_oVd_expdb", sep="/"), row.names = FALSE, quote = FALSE)
+
+#all per cytoscape senza le quote
+ALL$name<-row.names(ALL)
+write.table(ALL, paste(path, "cuore/ALL_CYTOSCAPE", sep="/"), row.names = FALSE, quote = FALSE)
+
+
