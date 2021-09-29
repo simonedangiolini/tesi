@@ -35,6 +35,6 @@ for (i in 1:1000){
   deseq2ResAFinal$diffexpressed[deseq2ResAFinal$log2FoldChange < 0 & deseq2ResAFinal$padj < 0.05] <- "DOWN"
   ALLR<-subset(deseq2ResAFinal, diffexpressed=="DOWN" | diffexpressed=="UP")                                  
   DEG[i]<-nrow(ALLR)                                                  #in DEG we put everytime the number of the DEG obtained in that randomization cycle
-  sink(file = "/home/simone/Scrivania/simone/tirocinio/tesi/randomizzazione yVd/cicli mille", append = TRUE)  #in another file we append the number of DEG so we can have the vector ready for the oother analysis.
-  sink(file=NULL)
 }  
+hist(vector, breaks = 100, main="Condition1VCondition2", ylab = "Frequence", xlab="Number of DEG") #so we can see the distribution of the number of DEG for all the 1000 cycles
+
