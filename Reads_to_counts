@@ -1,33 +1,22 @@
-#!/bin/bash
+!/bin/bash
 
-root=/media/simone/
-#root=/home/spliced/biolab_sshfs/media/biolab/
-#echo $(date +%s) ' ' $(date +%N)
-n=$(( $(cat /proc/cpuinfo | grep processor | wc -l) -1)) #number of processor
-for gruppo  in $(ls $root/Elements/SRA/Alzheimer); do
-	cd $root/Elements/SRA/Alzheimer/$gruppo
-	for run in $(ls $root/Elements/SRA/Alzheimer/$gruppo); do
+for GROUP  in $(ls $PATH/TO/GROUPS); do                            #groups is our 3 groups young/old/dis
+	cd $PATH/TO/GROUPS/GROUP
+	for SAMPLE in $(ls $PATH/TO/GROUPS/GROUP); do		   #sample is every sample of our groups
 		echo "******************"
-		echo "****** $run ******"
-		echo "******  :D  ******"
+		echo "****** $SAMPLE ******" 			   
 		echo "******************"
-		#run è la cartella es 433
-		#for gz in $(ls $root/Elements/SRA/Alzheimer/$gruppo/$run);do
-		#  	if [[ $gz =~ ^.*.fastq.gz$ ]]; then
-		#		echo $gz
-		#	fi
-		#	# prende solo le corse di mio interesse in ~0,2s
-		#done  #funziona ma è inutile quando abbiamo un grep 
-		x=$(ls $root/Elements/SRA/Alzheimer/$gruppo/$run | grep -E .*.fastq.gz$ | awk -F \. '{print $1}') #si può usare anche grep -o
-		##########################parte in cui si fa il fastqc e il trimming delle corse####
-		cd $root/Elements/SRA/Alzheimer/$gruppo/$run
-		#gunzip $x'_T_bash.fq.gz'
-		#fastqc $x'.fastq.gz'
-		#java -jar '/home/simone/Scrivania/Trimmomatic-0.39/trimmomatic-0.39.jar'  SE -threads 5 -phred33 $x.'fastq.gz' $x'_T_bash.fq.gz' ILLUMINACLIP:'/home/simone/Scrivania/Trimmomatic-0.39/adapters/adapters.fa':2:30:10 SLIDINGWINDOW:5:20 LEADING:3 (magari eliminiamolo sto leading) MINLEN:15 
-		#fastqc $x'_T_bash.fq.gz'
-		$root/Elements/allineamento/STAR-2.7.3a/source/STAR  --runThreadN $n --genomeDir $root/Elements/allineamento/GRCh38  --readFilesIn $x'_T_bash.fq' --outSAMtype BAM SortedByCoordinate --quantMode GeneCounts --outFileNamePrefix $root/Elements/SRA/Alzheimer/aligned/$run/STAR
+		for gz in $(ls $PATH/TO/GROUPS/GROUP/SAMPLE);do    #every file for my samples had .gz extension
+		x=$(ls $PATH/TO/GROUPS/GROUP/SAMPLE | grep -E .*.fastq.gz$ | awk -F \. '{print $1}')    #we put in X the name of the SAMPLE so during the analysis we can use the name and change the extension for every file that we'll create connected to that sample
+		cd $PATH/TO/GROUPS/GROUP/SAMPLE
+		gunzip $x'_T_bash.fq.gz'
+		fastqc $x'.fastq.gz'
+		java -jar 'PATH/TO/Trimmomatic-0.39/trimmomatic-0.39.jar'  SE -threads n -phred33 $x.'fastq.gz' $x'_T_bash.fq.gz' ILLUMINACLIP:'PATH/TO/ADAPTERS':2:30:10 SLIDINGWINDOW:5:20 MINLEN:15  #trimming process
+		fastqc $x'_T_bash.fq.gz'
+		$PATH/TO/STAR  --runThreadN $n --genomeDir $PATH/TO/REFERENCE/GENOME  --readFilesIn $x'_T_bash.fq' --outSAMtype BAM SortedByCoordinate --quantMode GeneCounts --outFileNamePrefix $PATH/TO/OUTPOUT/FILES/AND/PREFIX                 #alignment process 
+		htseq-count -f bam -s reverse 'PATH/TO/GROUPS/GROUP/SAMPLE/STARAligned.sortedByCoord.out.bam' '$PATH/TO/REFERENCE/GENOME' > $PATH/TO/OUTPUT/FILE/$x_htseqcount.txt              #we'll have a file with name of sample analysed and its genetic counts 
 	done
 done
-#echo $(date +%s) ' ' $(date +%N)
+
 
 
