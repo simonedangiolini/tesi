@@ -1,0 +1,40 @@
+DEG<-c()
+library("BiocParallel")
+directory <- "PATH/TO/GENE/COUNTS"
+sampleFiles<-grep("NAME_CONDITION1|NAME_CONDITION2",list.files(directory),value=TRUE)
+vector<- c("NAME_CONDITION1","NAME_CONDITION1","NAME_CONDITION2","NAME_CONDITION2")
+for (i in 1:1000){
+  condition<-vector
+  position1<-sample(x:y, z, replace=F)           #select z casual number from the interval x:y
+  for (x in 1:4){                                 
+    condition[position1[x]]<-"NAME_CONDITION2"   #changhe some samples of the condition1 with condition2          
+  }
+  position2<-sample(13:20, 4, replace=F)
+  for (y in 1:4){
+    condition[position2[y]]<-"dis"               #changhe some samples of the condition2 with condition1
+  }
+  sampleTable<- data.frame(sampleName=sampleFiles, #this is the same analys did with the samples with them right condition
+                           fileName=sampleFiles,
+                           condition= condition)
+  sampleTable$condition <- factor(sampleTable$condition)
+  library("DESeq2", warn.conflicts = FALSE)
+  ddsHTSeq <- DESeqDataSetFromHTSeqCount(sampleTable = sampleTable,
+                                         directory = directory,
+                                         design = ~condition)
+  keep <- rowSums(counts(ddsHTSeq)) >= 10
+  ddsHTSeq <- ddsHTSeq[keep,]
+  ddsHTSeq<-DESeq(ddsHTSeq)
+  results(ddsHTSeq)
+  res <- results(ddsHTSeq, contrast=c("condition","young","dis"))
+  deseq2ResA <- as.data.frame(res)
+  protein_cod<-read.table("/home/simone/Scrivania/simone/tirocinio/tesi/protein_coding_final", fill = TRUE)
+  deseq2ResAFinal<-deseq2ResA
+  deseq2ResAFinal<-deseq2ResAFinal[intersect(rownames(deseq2ResAFinal),protein_cod$V2),]
+  deseq2ResAFinal$diffexpressed <- "NO"
+  deseq2ResAFinal$diffexpressed[deseq2ResAFinal$log2FoldChange > 0 & deseq2ResAFinal$padj < 0.05] <- "UP"
+  deseq2ResAFinal$diffexpressed[deseq2ResAFinal$log2FoldChange < 0 & deseq2ResAFinal$padj < 0.05] <- "DOWN"
+  ALLR<-subset(deseq2ResAFinal, diffexpressed=="DOWN" | diffexpressed=="UP")                                  
+  DEG[i]<-nrow(ALLR)                                                  #in DEG we put everytime the number of the DEG obtained in that randomization cycle
+  sink(file = "/home/simone/Scrivania/simone/tirocinio/tesi/randomizzazione yVd/cicli mille", append = TRUE)  #in another file we append the number of DEG so we can have the vector ready for the oother analysis.
+  sink(file=NULL)
+}  
