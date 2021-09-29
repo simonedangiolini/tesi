@@ -1,0 +1,133 @@
+connessioni<-read.table(file="/home/simone/Scrivania/simone/tirocinio/traduzione_e_nuova_tabella_per_heart/9606.protein.physical.links.full.v11.0.txt", header=TRUE)
+traduzione<-read.table(file="/home/simone/Scrivania/simone/tirocinio/traduzione_e_nuova_tabella_per_heart/traduzione.txt", header=TRUE) 
+colnames (traduzione)[1]<-"protein1"
+colnames (traduzione)[2]<-"gene_1"
+definitive<- join(connessioni, traduzione, by="protein1", type="left")
+colnames (traduzione)[1]<-"protein2"
+colnames (traduzione)[2]<-"gene_2"
+definitive<- join(definitive, traduzione, by="protein2", type="left")
+definitive<-definitive[c("protein1","gene_1","protein2","gene_2","homology","experiments","experiments_transferred","database","database_transferred","textmining","textmining_transferred","combined_score")]
+ALLoVd=read.table(file="/home/simone/Scrivania/simone/tirocinio/tesi/risultati_analisi/plot_e_dati/oVd/ALLoVd", header=TRUE)
+ALLyVd=read.table(file="/home/simone/Scrivania/simone/tirocinio/tesi/risultati_analisi/plot_e_dati/yVd/ALLyVd", header=TRUE)
+
+connessioni_yVd<-data.frame(matrix(ncol=12,nrow = 0))
+for (row in 1:nrow(definitive)){
+  if (definitive[row,2] %in% row.names(ALLyVd) & definitive[row,4] %in% row.names(ALLyVd)){   
+    connessioni_yVd<-rbind(connessioni_yVd, definitive[row,]) 
+  }
+}
+
+connessioni_yVd<-data.frame(matrix(ncol=12,nrow = 0))
+for (row in 3000001:4000000){
+  if (row %% 10000 == 0){
+    print(row)
+  }
+  if (definitive[row,2] %in% row.names(ALLyVd)) {   
+    connessioni_yVd<-rbind(connessioni_yVd, definitive[row,]) #è quello con il check solo su una colonna
+  }
+}
+
+write.table(connessioni_yVd, paste(path, "cuore/connessioni_yVd_1", sep="/"), row.names = FALSE, quote = FALSE)
+
+
+connessioni_yVd<-data.frame(matrix(ncol=12,nrow = 0))
+for (row in 1:nrow(definitive)){
+  if (row %% 10000 == 0){
+    print(row)
+  }
+  if (definitive[row,2] %in% row.names(ALLyVd)) {   
+    connessioni_yVd<-rbind(connessioni_yVd, definitive[row,]) #è quello con il check solo su una colonna
+  }
+}
+
+###############################
+
+
+
+
+connessioni2_yVd<-data.frame(matrix(ncol=12,nrow = 0))
+for (row in 1:(connessioni_yVd)){
+  if (connessioni_yVd[row,4] %in% row.names(ALLyVd)) {   
+    connessioni2_yVd<-rbind(connessioni2_yVd, connessioni_yVd[row,]) #è quello definitivo
+  }
+}
+
+connessioni_oVd<-data.frame(matrix(ncol=12,nrow = 0))
+for (row in 6000001:nrow(definitive)){
+  if (row %% 10000 == 0){
+    print(row)
+  }
+  if (definitive[row,2] %in% row.names(ALLoVd)) {   
+    connessioni_oVd<-rbind(connessioni_oVd, definitive[row,]) #è quello con il check solo su una colonna
+  }
+}
+write.table(connessioni_yVd, paste(path, "cuore/connessioni_oVd_3", sep="/"), row.names = FALSE, quote = FALSE)
+
+connessioni2_oVd<-data.frame(matrix(ncol=12,nrow = 0))
+for (row in 1:(connessioni_oVd)){
+  if (connessioni_oVd[row,4] %in% row.names(ALLoVd)) {   
+    connessioni2_oVd<-rbind(connessioni2_oVd, connessioni_oVd[row,]) #è quello definitivo
+  }
+}
+write.table(connessioni2_yVd, paste(path, "cuore/connessioni2_yVd", sep="/"), sep = "\t") 
+write.table(connessioni2_oVd, paste(path, "cuore/connessioni2_oVd", sep="/"), sep = "\t") 
+
+
+###ciclo da mandare dppo che ho totenuto le varie liste di connnessioni spezzate in più parti
+path <- "/home/simone/Scrivania/simone/tirocinio"
+ALLyVd=read.table(file=paste(path, "cuore/ALLyVd", sep="/"), header=TRUE)
+connessioni_yVd_7<-read.table(file=paste(path, "cuore/connessioni/connessioni_yVd_7", sep="/"), header=TRUE)
+connessioni_yVd_7_def<-data.frame(matrix(ncol=12,nrow = 0))
+for (row in 1:nrow(connessioni_yVd_7)){
+  if (row %% 10000 == 0){
+    print(row)
+  }
+  if (connessioni_yVd_7[row,4] %in% row.names(ALLyVd)) {   
+    connessioni_yVd_7_def<-rbind(connessioni_yVd_7_def, connessioni_yVd_7[row,]) #è quello definitivo
+  }
+}
+write.table(connessioni_yVd_7_def, paste(path, "cuore/connessioni/connessioni_yVd_7_def", sep="/"), row.names = FALSE, quote = FALSE)
+
+#CICLO DA MANDARE PER FARE REINTEGRARE I FILTRATI CHE DEVONO ESSERE REINSERITI
+connessioni_reinserite_oVd<-data.frame(matrix(ncol=12,nrow = 0))
+for (row in 1:nrow(definitive)){
+  if (row %% 10000 == 0){
+    print(row)
+  }
+  if (definitive[row,2] %in% oVd_omessi_filtrati[,3]) {   
+    connessioni_reinserite_oVd<-rbind(connessioni_reinserite_oVd, definitive[row,]) #è quello con il check solo su una colonna
+  }
+}
+write.table(connessioni_reinserite_oVd, paste(path, "cuore/connessioni_reinserite_oVd", sep="/"), row.names = FALSE, quote = FALSE)
+
+###adesso da connessioni reinserite devo flitrare solo quelle che sulla 4° colonna hanno un gene presente nella lista dei deg aggiornata con gli omessi e poi filtrati inutile rimandare tutto lo script filtro solo la parte che mi interessa
+
+library(plyr)
+path <- "/home/simone/Scrivania/simone/tirocinio"
+connessioni_reinserite_oVd<-read.table(file=paste(path, "cuore/connessioni/connessioni_reinserite_oVd", sep="/"), header=TRUE)
+connessioni_reinserite_yVd<-read.table(file=paste(path, "cuore/connessioni/connessioni_reinserite_yVd", sep="/"), header=TRUE)
+ALLoVd_aggiornato=read.table(file=paste(path, "cuore/conenssioni/ALLoVd_aggiornato", sep="/"), header=TRUE) #sono quelli nuovi con i nomi degli omessi nuovi
+ALLyVd_aggiornato=read.table(file=paste(path, "cuore/connessioni/ALLyVd_aggiornato", sep="/"), header=TRUE)
+
+connessioni_reinserite_oVd_finale<-data.frame(matrix(ncol=12,nrow = 0))
+for (row in 1:nrow(connessioni_reinserite_oVd)){
+  if (row %% 10000 == 0){
+    print(row)
+  }
+  if (connessioni_reinserite_oVd[row,4] %in% ALLoVd_aggiornato$new_name) {   
+    connessioni_reinserite_oVd_finale<-rbind(connessioni_reinserite_oVd_finale, connessioni_reinserite_oVd[row,])
+  }
+}
+write.table(connessioni_reinserite_oVd_finale, paste(path, "cuore/connessioni_reinserite_yVd", sep="/"), row.names = FALSE, quote = FALSE)
+
+connessioni_reinserite_yVd_finale<-data.frame(matrix(ncol=12,nrow = 0))
+for (row in 1:nrow(connessioni_reinserite_yVd)){
+  if (row %% 10000 == 0){
+    print(row)
+  }
+  if (connessioni_reinserite_yVd[row,4] %in% ALLyVd_aggiornato$new_name) {   
+    connessioni_reinserite_yVd_finale<-rbind(connessioni_reinserite_yVd_finale, connessioni_reinserite_yVd[row,])
+  }
+}
+write.table(connessioni_reinserite_yVd_finale, paste(path, "cuore/connessioni_reinserite_yVd_finale", sep="/"), row.names = FALSE, quote = FALSE)
+
