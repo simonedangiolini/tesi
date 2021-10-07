@@ -1,5 +1,12 @@
-ALLyVd<-read.table("/home/simone/Scrivania/simone/tirocinio/tesi/risultati_analisi/plot_e_dati/yVd/ALLyVd")
-ALLoVd<-read.table("/home/simone/Scrivania/simone/tirocinio/tesi/risultati_analisi/plot_e_dati/oVd/ALLoVd")
+path_to_DEG1<-$1
+path_to_DEG2<-$2
+path_to_DEG3<-$3
+
+
+ALLyVd<-read.table("path_to_DEG1")
+ALLoVd<-read.table("path_to_DEG2")
+ALLyVo<-read.table("path_to_DEG3")
+
 
 library(eulerr)
 yVd_oVd<-length(intersect(row.names(ALLoVd),row.names(ALLyVd)))
@@ -11,7 +18,7 @@ fit <- euler(c("youngVdis" = length(row.names(ALLyVd))-length(intersect(row.name
                "youngVdis&oldVdis"= yVd_oVd, 
                "youngVdis&youngVold"= yVd_yVo,
                "oldVdis&youngVold"= oVd_yVo))
-plot(fit, quantities= TRUE)
+plot(fit, quantities= TRUE)    #now we have the Eulero Venn graph about the DEG common to all the comparisons
 
 
 ALLyVd<-subset(ALLyVd, select=c("log2FoldChange", "padj"))
@@ -30,4 +37,4 @@ library(plyr)
 ALL<-join (ALLyVd, ALLoVd, by="name" , type= "full" )
 ALL<-join(ALL, ALLyVo, by="name", type="full")
 row.names(ALL)<-ALL$name
-ALL<-ALL[order(row.names(ALL)),]
+ALL<-ALL[order(row.names(ALL)),]  #here we a have the ALL the DEG and the information about what was the comparison or comparisons of provenance
