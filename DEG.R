@@ -27,7 +27,7 @@ deseq2ResAFinal<-deseq2ResA
 deseq2ResAFinal<-deseq2ResAFinal[intersect(rownames(deseq2ResAFinal),protein_cod$V2),]  #eliminate all the file that are not protein coding genes
 deseq2ResAFinal$diffexpressed <- "NO"
 deseq2ResAFinal$diffexpressed[deseq2ResAFinal$log2FoldChange > 0 & deseq2ResAFinal$padj < 0.05] <- "UP"
-deseq2ResAFinal$diffexpressed[deseq2ResAFinal$log2FoldChange < 0 & deseq2ResAFinal$padj < 0.05] <- "DOWN"
+deseq2ResAFinal$diffexpressed[deseq2ResAFinal$log2FoldChange < 0 & deseq2ResAFinal$padj < 0.05] <- "DOWN" 
 DEG<-subset(deseq2ResAFinal, diffexpressed=="DOWN" | diffexpressed=="UP")   #leave in DEG just the genes that are differented express across the groups
 conts<-counts(ddsHTSeq)
 conts<-as.data.frame(counts)                                        #here we have the counts of each gene for each sample 
